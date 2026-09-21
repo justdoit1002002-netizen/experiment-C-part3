@@ -1,0 +1,364 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #f4f6fb;
+  color: #1f2937;
+  font-family: "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  text-align: center;
+  padding: 20px 16px 8px;
+}
+
+.app-header h1 {
+  font-size: 1.25rem;
+  margin: 0 0 4px;
+  color: #1e3a8a;
+}
+
+.progress-text {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+#app {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.screen {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 28px 22px;
+  box-shadow: 0 6px 20px rgba(30, 58, 138, 0.08);
+  text-align: center;
+}
+
+.intro-text {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #374151;
+  margin-bottom: 24px;
+}
+
+.step-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #2563eb;
+  letter-spacing: 0.02em;
+  margin: 0 0 18px;
+}
+
+.btn {
+  display: inline-block;
+  width: 100%;
+  padding: 14px 16px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.05s ease, opacity 0.15s ease;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: #2563eb;
+  color: #ffffff;
+  margin-top: 20px;
+}
+
+.btn-primary:hover {
+  opacity: 0.92;
+}
+
+.btn-primary:disabled {
+  background: #cbd5e1;
+  color: #64748b;
+  cursor: default;
+  opacity: 1;
+}
+
+.btn-primary:disabled:active {
+  transform: none;
+}
+
+.btn-speaker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  background: #eef2ff;
+  color: #1e3a8a;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.btn-speaker:active {
+  transform: scale(0.98);
+}
+
+.btn-speaker:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-speaker-done,
+.btn-speaker-done:disabled {
+  background: #dcfce7;
+  color: #15803d;
+  opacity: 1;
+}
+
+.step-body {
+  margin-bottom: 8px;
+  min-height: 60px;
+}
+
+.korean-sound {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+
+/* 강세 표시: 강하게 들리는 부분은 크게, 약하게 들리는 기능어는 작게 */
+.stress-strong {
+  font-size: 1.18em;
+  font-weight: 800;
+  color: #1e3a8a;
+}
+
+.stress-weak {
+  font-size: 0.72em;
+  font-weight: 500;
+  color: #9ca3af;
+}
+
+.korean-meaning {
+  font-size: 1.15rem;
+  color: #2563eb;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+.step1-meaning-focus {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #2563eb;
+  line-height: 1.4;
+  margin: 4px 0 8px;
+}
+
+.btn-sound-hint-toggle {
+  display: inline-block;
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  margin: 0 0 14px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #9ca3af;
+  cursor: pointer;
+}
+
+.btn-sound-hint-toggle:hover {
+  color: #6b7280;
+}
+
+.sound-hint-text {
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: #9ca3af;
+  line-height: 1.5;
+  margin: -6px 0 18px;
+}
+
+.sound-hint-text .stress-strong {
+  font-size: 1.1em;
+  font-weight: 600;
+  color: #9399a8;
+}
+
+.sound-hint-text .stress-weak {
+  font-size: 0.8em;
+  color: #c1c7d0;
+}
+
+.english-reveal {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 6px;
+}
+
+.hint-text {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  line-height: 1.5;
+  margin-top: 10px;
+}
+
+.breakdown-list {
+  text-align: left;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.breakdown-item {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  color: #374151;
+}
+
+.breakdown-chunk {
+  font-weight: 700;
+  color: #111827;
+}
+
+.breakdown-arrow {
+  margin: 0 6px;
+  color: #9ca3af;
+}
+
+.quiz-score-box {
+  text-align: left;
+  margin-bottom: 16px;
+}
+
+.quiz-score-main {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e3a8a;
+  margin: 0 0 10px;
+}
+
+.quiz-stat-line {
+  font-size: 0.9rem;
+  color: #374151;
+  margin: 0 0 4px;
+}
+
+.quiz-wrong-meta {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.choice-area {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.btn-choice {
+  background: #f3f4f6;
+  color: #1f2937;
+  border: 1.5px solid #e5e7eb;
+}
+
+.btn-choice:disabled {
+  cursor: default;
+}
+
+.choice-correct {
+  background: #dcfce7 !important;
+  border-color: #22c55e !important;
+  color: #15803d !important;
+}
+
+.choice-wrong {
+  background: #fee2e2 !important;
+  border-color: #ef4444 !important;
+  color: #b91c1c !important;
+}
+
+.feedback {
+  margin: 14px 0 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.feedback-correct {
+  color: #15803d;
+}
+
+.feedback-wrong {
+  color: #b91c1c;
+}
+
+.quiz-wrong-list {
+  text-align: left;
+  margin-top: 8px;
+}
+
+.quiz-wrong-item {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.quiz-wrong-item .english-reveal,
+.quiz-wrong-item .korean-sound,
+.quiz-wrong-item .korean-meaning {
+  margin: 0 0 4px;
+  font-size: 1rem;
+}
+
+.quiz-wrong-selected {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  color: #b91c1c;
+}
+
+/* PC 등 넓은 화면 */
+@media (min-width: 600px) {
+  .app-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .card {
+    padding: 36px 32px;
+  }
+}

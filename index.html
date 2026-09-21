@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>토익 Part 3 청취 훈련</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="app-header">
+    <h1>토익 Part 3 청취 훈련</h1>
+    <p id="progressText" class="progress-text"></p>
+  </header>
+
+  <main id="app">
+
+    <!-- 시작 화면 -->
+    <section id="screen-start" class="screen">
+      <div class="card">
+        <p class="intro-text">
+          영어 소리를 먼저 듣고, 그 소리와 의미를 직접 연결하는 훈련이에요.<br />
+          영어 철자는 마지막 단계에서만 공개됩니다.
+        </p>
+        <button id="btnStart" class="btn btn-primary">학습 시작</button>
+      </div>
+    </section>
+
+    <!-- 훈련 화면 (1~4단계 공통 컨테이너) -->
+    <section id="screen-training" class="screen hidden">
+      <div class="card">
+
+        <p id="stepLabel" class="step-label"></p>
+
+        <button id="btnPlay" class="btn-speaker" aria-label="음성 재생">🔊 음성 재생</button>
+
+        <div id="stepBody" class="step-body"></div>
+
+        <button id="btnNext" class="btn btn-primary hidden">다음</button>
+      </div>
+    </section>
+
+    <!-- 청취 훈련 완료 -> 퀴즈 시작 안내 화면 -->
+    <section id="screen-complete" class="screen hidden">
+      <div class="card">
+        <p class="intro-text">수고했어요! 모든 표현의 청취 훈련을 마쳤습니다. 🎉<br />이제 퀴즈로 실력을 확인해볼까요?</p>
+        <button id="btnStartQuiz" class="btn btn-primary">퀴즈 시작하기</button>
+      </div>
+    </section>
+
+    <!-- 퀴즈 화면 -->
+    <section id="screen-quiz" class="screen hidden">
+      <div class="card">
+        <p id="quizProgressText" class="step-label"></p>
+
+        <button id="btnQuizPlay" class="btn-speaker" aria-label="음성 재생">🔊 음성 재생</button>
+
+        <p class="hint-text">방금 들은 문장의 뜻으로 알맞은 것을 고르세요.</p>
+
+        <div id="quizChoiceArea" class="choice-area"></div>
+
+        <p id="quizFeedback" class="feedback hidden"></p>
+
+        <button id="btnQuizNext" class="btn btn-primary hidden">다음 문제</button>
+      </div>
+    </section>
+
+    <!-- 퀴즈 결과 화면 -->
+    <section id="screen-quiz-result" class="screen hidden">
+      <div class="card">
+        <div id="quizScoreText" class="quiz-score-box"></div>
+        <div id="quizWrongList" class="quiz-wrong-list"></div>
+        <button id="btnRestart" class="btn btn-primary">처음부터 다시 하기</button>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

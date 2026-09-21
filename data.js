@@ -1,0 +1,243 @@
+// 학습 표현 데이터 (토익 LC 300~400점대 학습자를 위한 실전 표현 15개)
+// 난이도/문장 길이가 한쪽으로 치우치지 않도록 짧은 표현, 중간 길이, 관용구 위주의
+// 긴 표현을 고르게 섞어서 구성함.
+// english      : 실제 TTS로 재생할 영어 원문 (4단계 전에는 절대 화면에 노출하지 않음)
+// koreanSound  : 실제 발화(연음·축약·약화)를 반영한 한글 소리표기. 정확한 발음기호가 아니라
+//                "실제로 들리는 소리"를 옮긴 것이며, 아래 강세 표시 문법을 사용한다.
+//                  **강하게 들리는 부분**  -> 크고 진하게 표시
+//                  ~약하게 들리는 부분~    -> 작고 흐리게 표시
+//                  표시 없는 부분         -> 기본 크기 (중간 강도)
+// meaning      : 한국어 의미
+// breakdown    : 4단계에서 보여줄 단어·표현 뜻풀이 (chunk: 구간, meaning: 뜻)
+// distractors  : 최종 퀴즈 4지선다에 쓰일 오답 보기 (한국어)
+const EXPRESSIONS = [
+  {
+    english: "As soon as possible",
+    audio: "audio/01.mp3.mp3",
+    koreanSound: "~어즈~ **쑨** ~어즈~ **파서블**",
+    meaning: "가능한 한 빨리",
+    breakdown: [
+      { chunk: "as soon as", meaning: "~하자마자, ~하는 대로" },
+      { chunk: "possible", meaning: "가능한" }
+    ],
+    distractors: [
+      "예정보다 늦게",
+      "다음 기회에",
+      "필요할 때만"
+    ]
+  },
+  {
+    english: "I'll get back to you",
+    audio: "audio/02.mp3.mp3",
+    koreanSound: "~아일~ **겟백** ~트유~",
+    meaning: "다시 연락드릴게요",
+    breakdown: [
+      { chunk: "I'll", meaning: "저는 ~할게요" },
+      { chunk: "get back to you", meaning: "당신에게 다시 연락하다" }
+    ],
+    distractors: [
+      "지금 바로 알려드릴게요",
+      "제가 대신 처리할게요",
+      "곧 도착할게요"
+    ]
+  },
+  {
+    english: "Let me check on that",
+    audio: "audio/03.mp3.mp3",
+    koreanSound: "~레미~ **첵칸** ~댓~",
+    meaning: "제가 확인해 볼게요",
+    breakdown: [
+      { chunk: "let me", meaning: "제가 ~할게요" },
+      { chunk: "check on", meaning: "~을 확인하다" },
+      { chunk: "that", meaning: "그것" }
+    ],
+    distractors: [
+      "그건 이미 확인했어요",
+      "제가 처리했어요",
+      "나중에 다시 물어봐 주세요"
+    ]
+  },
+  {
+    english: "Could you send me the file?",
+    audio: "audio/04.mp3.mp3",
+    koreanSound: "~커쥬~ 센미 ~더~ **파일**",
+    meaning: "그 파일 좀 보내주실 수 있나요?",
+    breakdown: [
+      { chunk: "could you ~?", meaning: "~해 주실 수 있나요" },
+      { chunk: "send me", meaning: "저에게 보내다" },
+      { chunk: "the file", meaning: "그 파일" }
+    ],
+    distractors: [
+      "그 파일을 이미 받았어요",
+      "그 파일은 삭제됐어요",
+      "그 파일을 찾을 수가 없어요"
+    ]
+  },
+  {
+    english: "I'm afraid I can't make it.",
+    audio: "audio/05.mp3.mp3",
+    koreanSound: "아머**프레이**드 ~아~ **캔트** 메이낏",
+    meaning: "죄송하지만 저는 못 갈 것 같아요",
+    breakdown: [
+      { chunk: "I'm afraid", meaning: "유감이지만 ~인 것 같다" },
+      { chunk: "can't make it", meaning: "가지 못하다, 참석하지 못하다" }
+    ],
+    distractors: [
+      "다행히 시간 맞춰 갈 수 있어요",
+      "이미 도착해서 기다리고 있어요",
+      "다른 사람이 대신 갈 거예요"
+    ]
+  },
+  {
+    english: "Let's go over the schedule.",
+    audio: "audio/06.mp3.mp3",
+    koreanSound: "렛츠 고우버 ~더~ **스케쥴**",
+    meaning: "일정을 한번 검토해 봅시다",
+    breakdown: [
+      { chunk: "let's", meaning: "~합시다" },
+      { chunk: "go over", meaning: "검토하다, 살펴보다" },
+      { chunk: "schedule", meaning: "일정" }
+    ],
+    distractors: [
+      "일정을 완전히 취소합시다",
+      "일정을 다음 주로 미룹시다",
+      "일정에 대해 아무것도 하지 맙시다"
+    ]
+  },
+  {
+    english: "Thanks so much for waiting.",
+    audio: "audio/07.mp3.mp3",
+    koreanSound: "땡스 쏘 머치 ~풔~ **웨이팅**",
+    meaning: "기다려 주셔서 정말 감사해요",
+    breakdown: [
+      { chunk: "thanks for ~ing", meaning: "~해 줘서 고맙다" },
+      { chunk: "wait", meaning: "기다리다" }
+    ],
+    distractors: [
+      "기다리게 해서 죄송해요",
+      "오래 걸리지 않을 거예요",
+      "먼저 가셔도 괜찮아요"
+    ]
+  },
+  {
+    english: "I need to reschedule the meeting.",
+    audio: "audio/08.mp3.mp3",
+    koreanSound: "아이 ~니투~ 리스케쥴 ~더~ **미팅**",
+    meaning: "회의 일정을 다시 잡아야 해요",
+    breakdown: [
+      { chunk: "need to", meaning: "~해야 한다" },
+      { chunk: "reschedule", meaning: "일정을 다시 잡다" },
+      { chunk: "meeting", meaning: "회의" }
+    ],
+    distractors: [
+      "회의를 예정대로 진행할 거예요",
+      "회의를 완전히 취소할 거예요",
+      "회의 시간을 이미 확인했어요"
+    ]
+  },
+  {
+    english: "Can you give me a hand?",
+    audio: "audio/09.mp3.mp3",
+    koreanSound: "~캐뉴~ 기미어 **핸드**",
+    meaning: "저 좀 도와주실 수 있어요?",
+    breakdown: [
+      { chunk: "give someone a hand", meaning: "~을 도와주다" },
+      { chunk: "hand", meaning: "도움, 손" }
+    ],
+    distractors: [
+      "혼자서도 할 수 있어요",
+      "제가 당신을 도와드릴게요",
+      "도움은 필요 없어요"
+    ]
+  },
+  {
+    english: "I'll take care of it.",
+    audio: "audio/10.mp3.mp3",
+    koreanSound: "~아일~ 테익 **케어**러빗",
+    meaning: "제가 처리할게요",
+    breakdown: [
+      { chunk: "take care of", meaning: "~을 처리하다, 맡다" },
+      { chunk: "it", meaning: "그것" }
+    ],
+    distractors: [
+      "그건 이미 처리됐어요",
+      "제가 할 수 없는 일이에요",
+      "다른 분께 부탁드려 보세요"
+    ]
+  },
+  {
+    english: "That sounds good to me.",
+    audio: "audio/11.mp3.mp3",
+    koreanSound: "댓 **사운즈 굿** ~트미~",
+    meaning: "저는 그게 좋은 것 같아요",
+    breakdown: [
+      { chunk: "sound good", meaning: "좋게 들리다, 괜찮은 것 같다" },
+      { chunk: "to me", meaning: "내가 보기에는" }
+    ],
+    distractors: [
+      "저는 별로 마음에 안 들어요",
+      "다시 생각해 봐야 할 것 같아요",
+      "그건 저한테 안 맞아요"
+    ]
+  },
+  {
+    english: "I'm running a bit late.",
+    audio: "audio/12.mp3.mp3",
+    koreanSound: "아임 러닝어빗 **레잇**",
+    meaning: "제가 좀 늦고 있어요",
+    breakdown: [
+      { chunk: "run late", meaning: "늦다, 지각하다" },
+      { chunk: "a bit", meaning: "조금" }
+    ],
+    distractors: [
+      "제가 좀 일찍 도착했어요",
+      "이미 제시간에 왔어요",
+      "오늘은 안 늦을 것 같아요"
+    ]
+  },
+  {
+    english: "It slipped my mind.",
+    audio: "audio/13.mp3.mp3",
+    koreanSound: "~잇~ **슬립트** 마이 **마인드**",
+    meaning: "깜빡 잊어버렸어요",
+    breakdown: [
+      { chunk: "slip one's mind", meaning: "깜빡 잊다" },
+      { chunk: "mind", meaning: "생각, 마음" }
+    ],
+    distractors: [
+      "잘 기억하고 있었어요",
+      "일부러 말하지 않았어요",
+      "처음부터 몰랐던 일이에요"
+    ]
+  },
+  {
+    english: "Let's wrap this up.",
+    audio: "audio/14.mp3.mp3",
+    koreanSound: "렛츠 **랩디썹**",
+    meaning: "이제 마무리합시다",
+    breakdown: [
+      { chunk: "wrap up", meaning: "마무리하다, 끝내다" },
+      { chunk: "this", meaning: "이것" }
+    ],
+    distractors: [
+      "이제 막 시작합시다",
+      "처음부터 다시 합시다",
+      "잠시 쉬었다가 합시다"
+    ]
+  },
+  {
+    english: "I'll email you the details.",
+    audio: "audio/15.mp3.mp3",
+    koreanSound: "~아일~ 이메일류 ~더~ **디테일즈**",
+    meaning: "자세한 내용은 이메일로 보내드릴게요",
+    breakdown: [
+      { chunk: "email", meaning: "이메일을 보내다" },
+      { chunk: "details", meaning: "세부사항" }
+    ],
+    distractors: [
+      "자세한 내용은 전화로 알려드릴게요",
+      "자세한 내용은 이미 보내드렸어요",
+      "세부사항은 아직 정해지지 않았어요"
+    ]
+  }
+];
