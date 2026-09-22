@@ -252,8 +252,11 @@ const TRAINING_COUNT = 5;
 // 자연스럽게 포함된 짧은 TOEIC Part 3 스타일 남녀 대화.
 //
 // audio / questionAudio / startSound: 실제 audio 폴더에 저장된 파일명 그대로 연결.
+// startSound 파일명에 포함된 '#'는 URL에서 프래그먼트(#) 구분자로 해석되어 그 뒤의
+// ".mp3"까지 요청에서 잘려나가므로(로컬 file://에서는 우연히 되기도 하지만 GitHub Pages 같은
+// 실제 웹 서버에서는 404가 남) 반드시 %23으로 퍼센트 인코딩해야 한다. 파일 자체는 그대로 둔다.
 const PART3 = {
-  startSound: "audio/A_clean,_professiona_#4-1790039877913.mp3", // "실전 Part 3 도전하기" 클릭 직후 재생되는 시작 효과음
+  startSound: "audio/A_clean,_professiona_%234-1790039877913.mp3", // "실전 Part 3 도전하기" 클릭 직후 재생되는 시작 효과음
   audio: "audio/part3.mp3.mp3",
   questionAudio: "audio/part3-question.mp3.mp3",
 
