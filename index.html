@@ -80,14 +80,16 @@
         <p class="step-label">실전 Part 3</p>
         <p class="intro-text">방금 연습한 표현,<br />실제 대화에서도 들릴까요?</p>
 
-        <button id="btnPart3Play" class="btn-speaker" aria-label="대화 음성 재생">🔊 대화 듣기</button>
-        <p id="part3AudioNotice" class="hint-text hidden"></p>
-
-        <p class="hint-text">대화를 듣고 아래 문제를 풀어보세요. (다시듣기 가능)</p>
-
         <p id="part3Question" class="step1-meaning-focus"></p>
 
         <div id="part3ChoiceArea" class="choice-area"></div>
+
+        <div id="part3Countdown" class="part3-countdown hidden">
+          <p class="hint-text">문제를 미리 읽어보세요</p>
+          <p id="part3CountdownNumber" class="part3-countdown-number">5</p>
+        </div>
+
+        <p id="part3AudioNotice" class="hint-text hidden"></p>
 
         <p id="part3Feedback" class="feedback hidden"></p>
 
@@ -100,6 +102,9 @@
       <div class="card explain-card">
         <p class="intro-text">방금 연습한 표현이<br />실제 대화 속에서 이렇게 사용됩니다.</p>
 
+        <button id="btnReplayDialogue" class="btn-speaker" type="button">🔁 대화 다시 듣기</button>
+        <p id="part3ReplayNotice" class="hint-text hidden"></p>
+
         <div id="part3Script" class="breakdown-list"></div>
 
         <div id="part3Highlights" class="breakdown-list"></div>
@@ -108,12 +113,51 @@
         <p id="part3Evidence" class="hint-text"></p>
         <p id="part3ExplainText" class="hint-text"></p>
 
+        <!-- 학습 인증카드 (모든 학습을 마친 마지막 화면에만 표시) -->
+        <div id="certCard" class="cert-card">
+          <div class="cert-card-header">
+            <span class="cert-card-brand">EZ2 LC TRAINING</span>
+            <span class="cert-card-day">DAY 01</span>
+          </div>
+
+          <p class="cert-card-title">TODAY COMPLETE <span class="cert-card-check">✓</span></p>
+          <p id="certCardDate" class="cert-card-date"></p>
+
+          <div class="cert-card-stats">
+            <div class="cert-card-stat-row">
+              <span class="cert-card-stat-label">표현 훈련</span>
+              <span id="certStatTraining" class="cert-card-stat-value">-</span>
+            </div>
+            <div class="cert-card-stat-row">
+              <span class="cert-card-stat-label">의미반응 퀴즈</span>
+              <span id="certStatQuiz" class="cert-card-stat-value">-</span>
+            </div>
+            <div class="cert-card-stat-row">
+              <span class="cert-card-stat-label">평균 반응시간</span>
+              <span id="certStatReaction" class="cert-card-stat-value">-</span>
+            </div>
+            <div class="cert-card-stat-row">
+              <span class="cert-card-stat-label">실전 Part 3</span>
+              <span id="certStatPart3" class="cert-card-stat-value">-</span>
+            </div>
+          </div>
+
+          <p class="cert-card-footer">🔥 오늘의 LC 훈련 완료</p>
+        </div>
+
+        <button id="btnSaveCert" class="btn btn-primary" type="button">인증카드 저장하기</button>
+
+        <button id="btnShareCert" class="btn btn-secondary" type="button">💬 인증카드 공유하기</button>
+        <p id="certShareNotice" class="hint-text hidden"></p>
+
         <button id="btnRestart" class="btn btn-primary">처음부터 다시 하기</button>
       </div>
     </section>
 
   </main>
 
+  <!-- 인증카드를 PNG로 저장하기 위한 라이브러리 (외부 서버 업로드 없이 브라우저에서 캡처) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="data.js"></script>
   <script src="script.js"></script>
 </body>

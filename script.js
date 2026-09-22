@@ -20,6 +20,8 @@ let quizReplayCount = 0;       // 현재 문제에서 🔊를 다시 누른 횟�
 
 // Part 3 상태
 let part3Selected = false; // 이미 답을 선택했는지 여부 (중복 클릭 방지)
+let part3CountdownTimer = null; // 5초 준비 카운트다운 인터벌 핸들
+let part3IsCorrect = null; // 방금 푼 Part 3 문제의 정답 여부 (인증카드 표시용)
 
 // ===== DOM 참조 =====
 const screenStart = document.getElementById("screen-start");
@@ -48,18 +50,32 @@ const quizScoreText = document.getElementById("quizScoreText");
 const quizWrongList = document.getElementById("quizWrongList");
 
 const btnStartPart3 = document.getElementById("btnStartPart3");
-const btnPart3Play = document.getElementById("btnPart3Play");
 const part3AudioNotice = document.getElementById("part3AudioNotice");
 const part3Question = document.getElementById("part3Question");
 const part3ChoiceArea = document.getElementById("part3ChoiceArea");
+const part3Countdown = document.getElementById("part3Countdown");
+const part3CountdownNumber = document.getElementById("part3CountdownNumber");
 const part3Feedback = document.getElementById("part3Feedback");
 const btnShowExplain = document.getElementById("btnShowExplain");
 
+const btnReplayDialogue = document.getElementById("btnReplayDialogue");
+const part3ReplayNotice = document.getElementById("part3ReplayNotice");
 const part3Script = document.getElementById("part3Script");
 const part3Highlights = document.getElementById("part3Highlights");
 const part3Answer = document.getElementById("part3Answer");
 const part3Evidence = document.getElementById("part3Evidence");
 const part3ExplainText = document.getElementById("part3ExplainText");
+
+// 학습 인증카드
+const certCard = document.getElementById("certCard");
+const certStatTraining = document.getElementById("certStatTraining");
+const certStatQuiz = document.getElementById("certStatQuiz");
+const certStatReaction = document.getElementById("certStatReaction");
+const certStatPart3 = document.getElementById("certStatPart3");
+const certCardDate = document.getElementById("certCardDate");
+const btnSaveCert = document.getElementById("btnSaveCert");
+const btnShareCert = document.getElementById("btnShareCert");
+const certShareNotice = document.getElementById("certShareNotice");
 
 // ===== 음성(MP3) 재생 =====
 // 문장별로 녹음된 실제 MP3 파일(각 EXPRESSIONS 항목의 audio 필드)을 재생한다.
@@ -95,31 +111,41 @@ function playCurrentQuizExpression(onEnd) {
   playAudioFile(item.audio, onEnd);
 }
 
-// Part 3 대화 음성(audio/part3.mp3) 재생 전용.
-// 01~15번 개별 표현 MP3와는 별도의 파일이며, 아직 파일이 없어도 앱이 멈추지 않도록
-// 재생 실패 시 화면에 안내 문구만 보여주고 넘어간다.
-function playPart3Audio() {
+// Part 3 전용 오디오 재생 헬퍼. 대화 음성(PART3.audio)과 문제 음성(PART3.questionAudio)이
+// 순서대로 이어지므로, 재생이 끝나면(성공/실패 모두) 호출자가 다음 단계로 넘어갈 수 있도록
+// onDone/onError 콜백을 받는다. 파일이 아직 없어 재생에 실패해도 앱이 멈추지 않는다.
+function playPart3Track(src, { onDone, onError } = {}) {
   if (isAudioPlaying) return;
   if (currentAudio) {
     currentAudio.pause();
     currentAudio.currentTime = 0;
   }
   isAudioPlaying = true;
-  const audio = new Audio(PART3.audio);
+  const audio = new Audio(src);
   currentAudio = audio;
 
-  const finish = () => {
+  const handleEnded = () => {
     isAudioPlaying = false;
+    if (onDone) onDone();
+  };
+  const handleError = () => {
+    isAudioPlaying = false;
+    if (onError) onError();
+    else if (onDone) onDone();
   };
 
-  audio.addEventListener("ended", finish, { once: true });
-  audio.addEventListener("error", () => {
-    finish();
-    part3AudioNotice.textContent = "⚠️ 아직 대화 음성 파일이 없어요. audio/part3.mp3 파일을 추가하면 재생돼요.";
-    part3AudioNotice.classList.remove("hidden");
-  }, { once: true });
+  audio.addEventListener("ended", handleEnded, { once: true });
+  audio.addEventListener("error", handleError, { once: true });
+  audio.play().catch(handleError);
+}
 
-  audio.play().catch(finish);
+// screen-part3의 안내 문구 영역에 줄을 이어붙여 보여준다 (대화/문제 음성이 각각
+// 없을 수 있으므로 먼저 뜬 안내를 지우지 않고 누적한다).
+function showPart3Notice(text) {
+  part3AudioNotice.innerHTML = part3AudioNotice.innerHTML
+    ? `${part3AudioNotice.innerHTML}<br />${text}`
+    : text;
+  part3AudioNotice.classList.remove("hidden");
 }
 
 // ===== 유틸 =====
@@ -209,7 +235,7 @@ function renderStep1MeaningPhase(item) {
       meaningRepeatCount += 1;
       repeatCountText2.textContent = String(meaningRepeatCount);
       if (meaningRepeatCount >= 3) {
-        goToNextStep(); // 마지막 재생이 끝난 직후 자동 전환
+        setTimeout(goToNextStep, 1000); // 마지막 재생이 끝난 후 1초 대기했다가 자동 전환
       } else {
         btnListenRepeat2.disabled = false;
       }
@@ -403,26 +429,92 @@ const PART3_LABELS = ["A", "B", "C", "D"];
 
 function startPart3() {
   part3Selected = false;
+  part3IsCorrect = null;
   progressText.textContent = "";
   part3AudioNotice.classList.add("hidden");
-  part3AudioNotice.textContent = "";
+  part3AudioNotice.innerHTML = "";
   part3Feedback.classList.add("hidden");
   part3Feedback.textContent = "";
   btnShowExplain.classList.add("hidden");
+  part3Countdown.classList.add("hidden");
+  part3Question.textContent = "";
+  part3ChoiceArea.innerHTML = "";
 
+  showScreen(screenPart3);
+  playPart3StartSound();
+}
+
+// 1) "실전 Part 3 도전하기" 클릭 직후 시작 효과음 재생
+// 효과음 재생에 실패해도 학습자 화면에는 아무 경고도 띄우지 않고 조용히 다음 단계로 진행한다.
+function playPart3StartSound() {
+  playPart3Track(PART3.startSound, {
+    onDone: renderPart3QuestionAndCountdown,
+    onError: renderPart3QuestionAndCountdown
+  });
+}
+
+// 2) 효과음이 끝나면 문제 + 4개 보기를 표시하고, 곧바로 5초 미리읽기 카운트다운 시작
+//    (보기는 문제 음성이 끝날 때까지 선택 비활성화)
+function renderPart3QuestionAndCountdown() {
   part3Question.textContent = PART3.question;
-
   part3ChoiceArea.innerHTML = "";
   PART3.options.forEach((optionText, index) => {
     const btn = document.createElement("button");
     btn.className = "btn btn-choice";
     btn.textContent = `(${PART3_LABELS[index]}) ${optionText}`;
+    btn.disabled = true;
     btn.addEventListener("click", () => handlePart3Choice(index, btn));
     part3ChoiceArea.appendChild(btn);
   });
 
-  showScreen(screenPart3);
-  playPart3Audio();
+  startPart3Countdown();
+}
+
+function startPart3Countdown() {
+  let remaining = 5;
+  part3CountdownNumber.textContent = String(remaining);
+  part3Countdown.classList.remove("hidden");
+
+  if (part3CountdownTimer) clearInterval(part3CountdownTimer);
+  part3CountdownTimer = setInterval(() => {
+    remaining -= 1;
+    if (remaining <= 0) {
+      clearInterval(part3CountdownTimer);
+      part3CountdownTimer = null;
+      part3Countdown.classList.add("hidden");
+      playPart3Dialogue();
+    } else {
+      part3CountdownNumber.textContent = String(remaining);
+    }
+  }, 1000);
+}
+
+// 3) 카운트다운 종료 -> 대화 음성(audio/part3.mp3.mp3) 자동 재생
+function playPart3Dialogue() {
+  playPart3Track(PART3.audio, {
+    onDone: playPart3QuestionAudio,
+    onError: () => {
+      showPart3Notice("⚠️ 아직 대화 음성 파일이 없어요. audio/part3.mp3.mp3 파일을 확인해주세요.");
+      playPart3QuestionAudio();
+    }
+  });
+}
+
+// 4) 대화 종료 -> 문제 문장을 읽어주는 성우 음성 자동 재생
+// (음성 안에 "Question." 낭독 + pause가 포함되어 있음. 화면에는 별도 텍스트를 띄우지 않는다.)
+function playPart3QuestionAudio() {
+  playPart3Track(PART3.questionAudio, {
+    onDone: enablePart3Choices,
+    onError: () => {
+      showPart3Notice("⚠️ 아직 문제 음성 파일이 없어요. audio/part3-question.mp3.mp3 파일을 확인해주세요.");
+      enablePart3Choices();
+    }
+  });
+}
+
+// 5) 문제 음성이 끝난 뒤에야 보기를 선택할 수 있다
+function enablePart3Choices() {
+  Array.from(part3ChoiceArea.children).forEach(b => (b.disabled = false));
 }
 
 function handlePart3Choice(index, btnEl) {
@@ -430,6 +522,7 @@ function handlePart3Choice(index, btnEl) {
   part3Selected = true;
 
   const isCorrect = index === PART3.answerIndex;
+  part3IsCorrect = isCorrect; // 인증카드에 표시할 정답 여부 저장
 
   Array.from(part3ChoiceArea.children).forEach(b => (b.disabled = true));
 
@@ -475,7 +568,139 @@ function showPart3Explain() {
   `;
   part3ExplainText.textContent = PART3.explanation;
 
+  part3ReplayNotice.classList.add("hidden");
+  part3ReplayNotice.textContent = "";
+
+  renderCertCard();
+
   showScreen(screenPart3Explain);
+}
+
+// ===== 학습 인증카드 (모든 학습을 마친 마지막 화면에만 표시) =====
+// 결과값은 모두 지금까지 앱에서 실제로 쌓인 데이터를 그대로 읽어서 표시한다.
+function renderCertCard() {
+  // 표현 훈련: 이 화면까지 오려면 5개 표현 훈련을 모두 마쳐야 하므로 항상 만점
+  certStatTraining.textContent = `${TRAINING_EXPRESSIONS.length}/${TRAINING_EXPRESSIONS.length}`;
+
+  // 의미반응 퀴즈: 기존 퀴즈 로직이 쌓아둔 quizResults 배열에서 그대로 계산
+  const quizTotal = quizResults.length;
+  const quizCorrect = quizResults.filter(r => r.isCorrect).length;
+  if (quizTotal > 0) {
+    const quizAccuracy = Math.round((quizCorrect / quizTotal) * 100);
+    certStatQuiz.textContent = `${quizCorrect}/${quizTotal} (${quizAccuracy}%)`;
+
+    const avgReactionSec = (
+      quizResults.reduce((sum, r) => sum + r.reactionTimeMs, 0) / quizTotal / 1000
+    ).toFixed(1);
+    certStatReaction.textContent = `${avgReactionSec}초`;
+  } else {
+    certStatQuiz.textContent = "-";
+    certStatReaction.textContent = "-";
+  }
+
+  // 실전 Part 3: handlePart3Choice에서 저장해 둔 정답 여부
+  certStatPart3.textContent = part3IsCorrect ? "정답 ✓" : "오답";
+  certStatPart3.classList.toggle("cert-value-correct", part3IsCorrect === true);
+  certStatPart3.classList.toggle("cert-value-wrong", part3IsCorrect !== true);
+
+  // 완료 날짜/시간: 기기의 현재 시각 기준
+  const now = new Date();
+  const pad = n => String(n).padStart(2, "0");
+  certCardDate.textContent =
+    `${now.getFullYear()}.${pad(now.getMonth() + 1)}.${pad(now.getDate())} · ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+  certShareNotice.classList.add("hidden");
+  certShareNotice.textContent = "";
+}
+
+// 인증카드 영역만 PNG로 캡처해서 다운로드한다 (서버 업로드 없이 브라우저에서 처리).
+async function saveCertCard() {
+  if (typeof html2canvas !== "function") {
+    alert("이미지 생성 기능을 불러오지 못했어요. 인터넷 연결을 확인한 뒤 다시 시도해주세요.");
+    return;
+  }
+
+  btnSaveCert.disabled = true;
+  const originalText = btnSaveCert.textContent;
+  btnSaveCert.textContent = "저장 중...";
+
+  try {
+    const canvas = await html2canvas(certCard, { backgroundColor: "#ffffff", scale: 2 });
+    const dataUrl = canvas.toDataURL("image/png");
+
+    const now = new Date();
+    const pad = n => String(n).padStart(2, "0");
+    const fileDate = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
+
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.download = `EZ2-LC-DAY01-${fileDate}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (err) {
+    alert("인증카드를 저장하는 중 문제가 발생했어요. 다시 시도해주세요.");
+  } finally {
+    btnSaveCert.disabled = false;
+    btnSaveCert.textContent = originalText;
+  }
+}
+
+// 인증카드 영역을 PNG로 캡처해서 Web Share API로 공유한다 (모바일에서 카카오톡 등 선택 가능).
+// 파일 공유를 지원하지 않는 기기/브라우저에서는 캡처 없이 안내만 보여주고 '저장하기'를 이용하게 한다.
+async function shareCertCard() {
+  certShareNotice.classList.add("hidden");
+  certShareNotice.textContent = "";
+
+  if (typeof html2canvas !== "function") {
+    certShareNotice.textContent = "⚠️ 이미지 생성 기능을 불러오지 못했어요. 인터넷 연결을 확인한 뒤 다시 시도해주세요.";
+    certShareNotice.classList.remove("hidden");
+    return;
+  }
+
+  const now = new Date();
+  const pad = n => String(n).padStart(2, "0");
+  const fileDate = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
+  const fileName = `EZ2-LC-DAY01-${fileDate}.png`;
+
+  // navigator.share / navigator.canShare로 "이미지 파일" 공유 지원 여부를 먼저 확인한다.
+  const canShareFiles = !!(
+    navigator.share &&
+    navigator.canShare &&
+    navigator.canShare({ files: [new File([], fileName, { type: "image/png" })] })
+  );
+
+  if (!canShareFiles) {
+    certShareNotice.textContent = "⚠️ 이 브라우저/기기에서는 이미지 공유가 지원되지 않아요. '인증카드 저장하기'로 저장한 뒤 직접 공유해주세요.";
+    certShareNotice.classList.remove("hidden");
+    return;
+  }
+
+  btnShareCert.disabled = true;
+  const originalText = btnShareCert.textContent;
+  btnShareCert.textContent = "공유 준비 중...";
+
+  try {
+    const canvas = await html2canvas(certCard, { backgroundColor: "#ffffff", scale: 2 });
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+    if (!blob) throw new Error("이미지 생성에 실패했습니다.");
+
+    const file = new File([blob], fileName, { type: "image/png" });
+
+    await navigator.share({
+      files: [file],
+      title: "EZ2 LC TRAINING · DAY 01",
+      text: "오늘의 LC 훈련 완료 🔥"
+    });
+  } catch (err) {
+    if (err && err.name !== "AbortError") { // 사용자가 공유창을 취소한 경우는 안내하지 않음
+      certShareNotice.textContent = "⚠️ 공유 중 문제가 발생했어요. '인증카드 저장하기'를 이용해주세요.";
+      certShareNotice.classList.remove("hidden");
+    }
+  } finally {
+    btnShareCert.disabled = false;
+    btnShareCert.textContent = originalText;
+  }
 }
 
 // ===== 이벤트 바인딩 =====
@@ -503,12 +728,23 @@ btnQuizNext.addEventListener("click", goToNextQuizQuestion);
 
 btnStartPart3.addEventListener("click", startPart3);
 
-btnPart3Play.addEventListener("click", () => {
-  part3AudioNotice.classList.add("hidden");
-  playPart3Audio();
+btnShowExplain.addEventListener("click", showPart3Explain);
+
+// 6) 해설 화면에서 대화 전체를 다시 들을 수 있는 버튼
+btnReplayDialogue.addEventListener("click", () => {
+  part3ReplayNotice.classList.add("hidden");
+  part3ReplayNotice.textContent = "";
+  playPart3Track(PART3.audio, {
+    onError: () => {
+      part3ReplayNotice.textContent = "⚠️ 대화 음성 파일을 재생할 수 없어요. audio/part3.mp3.mp3 파일을 확인해주세요.";
+      part3ReplayNotice.classList.remove("hidden");
+    }
+  });
 });
 
-btnShowExplain.addEventListener("click", showPart3Explain);
+// 인증카드 저장 버튼
+btnSaveCert.addEventListener("click", saveCertCard);
+btnShareCert.addEventListener("click", shareCertCard);
 
 btnRestart.addEventListener("click", () => {
   currentIndex = 0;
@@ -522,5 +758,10 @@ btnRestart.addEventListener("click", () => {
   quizResults = [];
   quizReplayCount = 0;
   part3Selected = false;
+  part3IsCorrect = null;
+  if (part3CountdownTimer) {
+    clearInterval(part3CountdownTimer);
+    part3CountdownTimer = null;
+  }
   showScreen(screenStart);
 });

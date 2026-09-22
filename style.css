@@ -113,6 +113,24 @@ body {
   transform: none;
 }
 
+.btn-secondary {
+  background: #ffffff;
+  color: #2563eb;
+  border: 1.5px solid #2563eb;
+  margin-top: 12px;
+}
+
+.btn-secondary:hover {
+  opacity: 0.85;
+}
+
+.btn-secondary:disabled {
+  color: #94a3b8;
+  border-color: #cbd5e1;
+  cursor: default;
+  opacity: 1;
+}
+
 .btn-speaker {
   display: inline-flex;
   align-items: center;
@@ -326,6 +344,19 @@ body {
   color: #b91c1c;
 }
 
+.part3-countdown {
+  margin: 18px 0 4px;
+  text-align: center;
+}
+
+.part3-countdown-number {
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: #2563eb;
+  margin: 4px 0 0;
+  line-height: 1;
+}
+
 .explain-card .intro-text {
   text-align: center;
 }
@@ -339,6 +370,106 @@ body {
 
 .explain-card #part3Answer {
   margin-top: 18px;
+}
+
+/* ===== 학습 인증카드 ===== */
+.cert-card {
+  background: linear-gradient(180deg, #eef2ff 0%, #ffffff 60%);
+  border: 1px solid #dbeafe;
+  border-radius: 20px;
+  padding: 24px 20px 20px;
+  margin: 26px 0 16px;
+  text-align: center;
+}
+
+.cert-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.cert-card-brand {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #1e3a8a;
+}
+
+.cert-card-day {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: #2563eb;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.cert-card-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #1e3a8a;
+  letter-spacing: 0.02em;
+  margin: 4px 0 6px;
+}
+
+.cert-card-check {
+  color: #22c55e;
+}
+
+.cert-card-stats {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 6px 16px;
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.cert-card-stat-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.cert-card-stat-row:last-child {
+  border-bottom: none;
+}
+
+.cert-card-stat-label {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.cert-card-stat-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+.cert-card-stat-value.cert-value-correct {
+  color: #15803d;
+}
+
+.cert-card-stat-value.cert-value-wrong {
+  color: #b91c1c;
+}
+
+.cert-card-footer {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ea580c;
+  margin: 0 0 4px;
+}
+
+.cert-card-date {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #2563eb;
+  text-align: center;
+  margin: 0 0 18px;
 }
 
 .quiz-wrong-list {
