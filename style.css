@@ -326,6 +326,21 @@ body {
   color: #b91c1c;
 }
 
+.explain-card .intro-text {
+  text-align: center;
+}
+
+.explain-card .breakdown-list,
+.explain-card #part3Answer,
+.explain-card #part3Evidence,
+.explain-card #part3ExplainText {
+  text-align: left;
+}
+
+.explain-card #part3Answer {
+  margin-top: 18px;
+}
+
 .quiz-wrong-list {
   text-align: left;
   margin-top: 8px;

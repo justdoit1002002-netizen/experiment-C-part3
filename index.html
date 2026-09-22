@@ -43,7 +43,7 @@
     <!-- 청취 훈련 완료 -> 퀴즈 시작 안내 화면 -->
     <section id="screen-complete" class="screen hidden">
       <div class="card">
-        <p class="intro-text">수고했어요! 모든 표현의 청취 훈련을 마쳤습니다. 🎉<br />이제 퀴즈로 실력을 확인해볼까요?</p>
+        <p class="intro-text">수고했어요! 5개 표현의 청취 훈련을 마쳤습니다. 🎉<br />이제 퀴즈로 실력을 확인해볼까요?</p>
         <button id="btnStartQuiz" class="btn btn-primary">퀴즈 시작하기</button>
       </div>
     </section>
@@ -70,6 +70,44 @@
       <div class="card">
         <div id="quizScoreText" class="quiz-score-box"></div>
         <div id="quizWrongList" class="quiz-wrong-list"></div>
+        <button id="btnStartPart3" class="btn btn-primary">실전 Part 3 도전하기</button>
+      </div>
+    </section>
+
+    <!-- 실전 Part 3 화면 -->
+    <section id="screen-part3" class="screen hidden">
+      <div class="card">
+        <p class="step-label">실전 Part 3</p>
+        <p class="intro-text">방금 연습한 표현,<br />실제 대화에서도 들릴까요?</p>
+
+        <button id="btnPart3Play" class="btn-speaker" aria-label="대화 음성 재생">🔊 대화 듣기</button>
+        <p id="part3AudioNotice" class="hint-text hidden"></p>
+
+        <p class="hint-text">대화를 듣고 아래 문제를 풀어보세요. (다시듣기 가능)</p>
+
+        <p id="part3Question" class="step1-meaning-focus"></p>
+
+        <div id="part3ChoiceArea" class="choice-area"></div>
+
+        <p id="part3Feedback" class="feedback hidden"></p>
+
+        <button id="btnShowExplain" class="btn btn-primary hidden">해설 보기</button>
+      </div>
+    </section>
+
+    <!-- 해설 화면 -->
+    <section id="screen-part3-explain" class="screen hidden">
+      <div class="card explain-card">
+        <p class="intro-text">방금 연습한 표현이<br />실제 대화 속에서 이렇게 사용됩니다.</p>
+
+        <div id="part3Script" class="breakdown-list"></div>
+
+        <div id="part3Highlights" class="breakdown-list"></div>
+
+        <p id="part3Answer" class="korean-meaning"></p>
+        <p id="part3Evidence" class="hint-text"></p>
+        <p id="part3ExplainText" class="hint-text"></p>
+
         <button id="btnRestart" class="btn btn-primary">처음부터 다시 하기</button>
       </div>
     </section>

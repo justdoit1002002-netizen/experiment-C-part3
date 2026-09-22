@@ -1,5 +1,5 @@
 // ===== 상태 =====
-let currentIndex = 0; // 현재 표현 인덱스 (0 ~ EXPRESSIONS.length - 1)
+let currentIndex = 0; // 현재 표현 인덱스 (0 ~ TRAINING_EXPRESSIONS.length - 1)
 let currentStep = 1;  // 현재 단계 (1 ~ 2)
 let currentAudio = null;   // 현재(또는 마지막) 재생 중인 Audio 인스턴스
 let isAudioPlaying = false; // 음성 중복 재생 방지 플래그
@@ -8,12 +8,18 @@ let meaningRepeatCount = 0; // 1단계 2차(의미 연결) "듣고 따라 말하
 let soundHintOpen = false; // 2차 발화 연습에서 "소리 힌트 보기" 토글 열림 여부 (문장마다 초기화)
 const soundHintUsedIndexes = new Set(); // 소리 힌트를 한 번이라도 열어본 표현 인덱스 (실험 분석용)
 
-// 퀴즈 상태
+// 이번 프로토타입에서 한글소리 훈련 + 퀴즈에 실제로 사용하는 표현 (앞의 TRAINING_COUNT개만)
+const TRAINING_EXPRESSIONS = EXPRESSIONS.slice(0, TRAINING_COUNT);
+
+// 퀴즈 상태 (기존 실험 A와 동일한 방식. 대상 표현만 TRAINING_EXPRESSIONS 5개로 축소)
 let quizQueue = [];   // 랜덤으로 섞인 표현 목록 (퀴즈용)
 let quizIndex = 0;    // 현재 퀴즈 문제 인덱스
 let quizResults = []; // 각 문제의 결과 { item, selected, isCorrect, reactionTimeMs, replayCount }
 let quizQuestionStartTime = 0; // 현재 문제의 음성이 처음 재생된 시각 (performance.now())
 let quizReplayCount = 0;       // 현재 문제에서 🔊를 다시 누른 횟수 (첫 재생은 미포함)
+
+// Part 3 상태
+let part3Selected = false; // 이미 답을 선택했는지 여부 (중복 클릭 방지)
 
 // ===== DOM 참조 =====
 const screenStart = document.getElementById("screen-start");
@@ -21,6 +27,8 @@ const screenTraining = document.getElementById("screen-training");
 const screenComplete = document.getElementById("screen-complete");
 const screenQuiz = document.getElementById("screen-quiz");
 const screenQuizResult = document.getElementById("screen-quiz-result");
+const screenPart3 = document.getElementById("screen-part3");
+const screenPart3Explain = document.getElementById("screen-part3-explain");
 
 const progressText = document.getElementById("progressText");
 const stepLabel = document.getElementById("stepLabel");
@@ -38,6 +46,20 @@ const quizFeedback = document.getElementById("quizFeedback");
 const btnQuizNext = document.getElementById("btnQuizNext");
 const quizScoreText = document.getElementById("quizScoreText");
 const quizWrongList = document.getElementById("quizWrongList");
+
+const btnStartPart3 = document.getElementById("btnStartPart3");
+const btnPart3Play = document.getElementById("btnPart3Play");
+const part3AudioNotice = document.getElementById("part3AudioNotice");
+const part3Question = document.getElementById("part3Question");
+const part3ChoiceArea = document.getElementById("part3ChoiceArea");
+const part3Feedback = document.getElementById("part3Feedback");
+const btnShowExplain = document.getElementById("btnShowExplain");
+
+const part3Script = document.getElementById("part3Script");
+const part3Highlights = document.getElementById("part3Highlights");
+const part3Answer = document.getElementById("part3Answer");
+const part3Evidence = document.getElementById("part3Evidence");
+const part3ExplainText = document.getElementById("part3ExplainText");
 
 // ===== 음성(MP3) 재생 =====
 // 문장별로 녹음된 실제 MP3 파일(각 EXPRESSIONS 항목의 audio 필드)을 재생한다.
@@ -64,13 +86,40 @@ function playAudioFile(src, onEnd) {
 }
 
 function playCurrentExpression(onEnd) {
-  const item = EXPRESSIONS[currentIndex];
+  const item = TRAINING_EXPRESSIONS[currentIndex];
   playAudioFile(item.audio, onEnd);
 }
 
 function playCurrentQuizExpression(onEnd) {
   const item = quizQueue[quizIndex];
   playAudioFile(item.audio, onEnd);
+}
+
+// Part 3 대화 음성(audio/part3.mp3) 재생 전용.
+// 01~15번 개별 표현 MP3와는 별도의 파일이며, 아직 파일이 없어도 앱이 멈추지 않도록
+// 재생 실패 시 화면에 안내 문구만 보여주고 넘어간다.
+function playPart3Audio() {
+  if (isAudioPlaying) return;
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+  }
+  isAudioPlaying = true;
+  const audio = new Audio(PART3.audio);
+  currentAudio = audio;
+
+  const finish = () => {
+    isAudioPlaying = false;
+  };
+
+  audio.addEventListener("ended", finish, { once: true });
+  audio.addEventListener("error", () => {
+    finish();
+    part3AudioNotice.textContent = "⚠️ 아직 대화 음성 파일이 없어요. audio/part3.mp3 파일을 추가하면 재생돼요.";
+    part3AudioNotice.classList.remove("hidden");
+  }, { once: true });
+
+  audio.play().catch(finish);
 }
 
 // ===== 유틸 =====
@@ -92,14 +141,14 @@ function formatKoreanSound(text) {
 }
 
 function showScreen(el) {
-  [screenStart, screenTraining, screenComplete, screenQuiz, screenQuizResult].forEach(s =>
+  [screenStart, screenTraining, screenComplete, screenQuiz, screenQuizResult, screenPart3, screenPart3Explain].forEach(s =>
     s.classList.add("hidden")
   );
   el.classList.remove("hidden");
 }
 
 function updateProgressText() {
-  progressText.textContent = `표현 ${currentIndex + 1} / ${EXPRESSIONS.length}`;
+  progressText.textContent = `표현 ${currentIndex + 1} / ${TRAINING_EXPRESSIONS.length}`;
 }
 
 // ===== 1단계 전용 렌더링 (1차 소리 연습 -> 2차 의미 연결 발화 연습) =====
@@ -170,7 +219,7 @@ function renderStep1MeaningPhase(item) {
 
 // ===== 단계별 렌더링 =====
 function renderStep() {
-  const item = EXPRESSIONS[currentIndex];
+  const item = TRAINING_EXPRESSIONS[currentIndex];
   updateProgressText();
 
   // 공통 초기화
@@ -200,7 +249,7 @@ function renderStep() {
       <p class="korean-meaning">${item.meaning}</p>
       ${breakdownHtml ? `<div class="breakdown-list">${breakdownHtml}</div>` : ""}
     `;
-    const isLast = currentIndex === EXPRESSIONS.length - 1;
+    const isLast = currentIndex === TRAINING_EXPRESSIONS.length - 1;
     btnNext.textContent = isLast ? "학습 완료" : "다음 표현";
     btnNext.classList.remove("hidden");
   }
@@ -214,7 +263,7 @@ function goToNextStep() {
     playCurrentExpression();
   } else {
     // 2단계 완료 -> 다음 표현 또는 종료
-    if (currentIndex < EXPRESSIONS.length - 1) {
+    if (currentIndex < TRAINING_EXPRESSIONS.length - 1) {
       currentIndex += 1;
       currentStep = 1;
       renderStep();
@@ -225,9 +274,9 @@ function goToNextStep() {
   }
 }
 
-// ===== 퀴즈 =====
+// ===== 퀴즈 (기존 실험 A와 동일한 방식, 대상만 TRAINING_EXPRESSIONS 5개) =====
 function startQuiz() {
-  quizQueue = shuffle(EXPRESSIONS); // 문제 순서 랜덤
+  quizQueue = shuffle(TRAINING_EXPRESSIONS); // 문제 순서 랜덤
   quizIndex = 0;
   quizResults = [];
   showScreen(screenQuiz);
@@ -323,7 +372,7 @@ function renderQuizResult() {
     <p class="quiz-stat-line">평균 반응시간: ${avgReactionSec}초</p>
     <p class="quiz-stat-line">한 번에 들은 정답률: ${firstListenAccuracyText}</p>
     <p class="quiz-stat-line">재청취 횟수: 총 ${totalReplays}회 (문제당 평균 ${avgReplays}회)</p>
-    <p class="quiz-stat-line">소리 힌트 사용: ${EXPRESSIONS.length}문장 중 ${soundHintUsedIndexes.size}문장</p>
+    <p class="quiz-stat-line">소리 힌트 사용: ${TRAINING_EXPRESSIONS.length}문장 중 ${soundHintUsedIndexes.size}문장</p>
   `;
 
   const wrongResults = quizResults.filter(r => !r.isCorrect);
@@ -349,6 +398,86 @@ function renderQuizResult() {
   showScreen(screenQuizResult);
 }
 
+// ===== 실전 Part 3 (퀴즈 완료 후 추가되는 마지막 단계) =====
+const PART3_LABELS = ["A", "B", "C", "D"];
+
+function startPart3() {
+  part3Selected = false;
+  progressText.textContent = "";
+  part3AudioNotice.classList.add("hidden");
+  part3AudioNotice.textContent = "";
+  part3Feedback.classList.add("hidden");
+  part3Feedback.textContent = "";
+  btnShowExplain.classList.add("hidden");
+
+  part3Question.textContent = PART3.question;
+
+  part3ChoiceArea.innerHTML = "";
+  PART3.options.forEach((optionText, index) => {
+    const btn = document.createElement("button");
+    btn.className = "btn btn-choice";
+    btn.textContent = `(${PART3_LABELS[index]}) ${optionText}`;
+    btn.addEventListener("click", () => handlePart3Choice(index, btn));
+    part3ChoiceArea.appendChild(btn);
+  });
+
+  showScreen(screenPart3);
+  playPart3Audio();
+}
+
+function handlePart3Choice(index, btnEl) {
+  if (part3Selected) return;
+  part3Selected = true;
+
+  const isCorrect = index === PART3.answerIndex;
+
+  Array.from(part3ChoiceArea.children).forEach(b => (b.disabled = true));
+
+  if (isCorrect) {
+    btnEl.classList.add("choice-correct");
+  } else {
+    btnEl.classList.add("choice-wrong");
+    part3ChoiceArea.children[PART3.answerIndex].classList.add("choice-correct");
+  }
+
+  part3Feedback.classList.remove("hidden");
+  part3Feedback.textContent = isCorrect ? "✅ 정답이에요!" : "❌ 아쉬워요, 오답이에요.";
+  part3Feedback.className = isCorrect ? "feedback feedback-correct" : "feedback feedback-wrong";
+
+  btnShowExplain.classList.remove("hidden");
+}
+
+function showPart3Explain() {
+  part3Script.innerHTML = PART3.script
+    .map(
+      line => `
+        <p class="breakdown-item">
+          <span class="breakdown-chunk">${line.speaker}:</span> ${line.english}<br />
+          <span class="korean-meaning" style="font-size:0.95rem;">${line.korean}</span>
+        </p>`
+    )
+    .join("");
+
+  part3Highlights.innerHTML =
+    `<p class="breakdown-item" style="margin-bottom:10px;"><strong>훈련했던 표현이 이렇게 쓰였어요</strong></p>` +
+    TRAINING_EXPRESSIONS.map(
+      item => `<p class="breakdown-item">✅ <span class="breakdown-chunk">${item.english}</span><span class="breakdown-arrow">→</span>${item.meaning}</p>`
+    ).join("");
+
+  const answerLabel = PART3_LABELS[PART3.answerIndex];
+  const answerText = PART3.options[PART3.answerIndex];
+  part3Answer.textContent = `정답: (${answerLabel}) ${answerText}`;
+  part3Evidence.innerHTML = `
+    근거: "${PART3.evidence.english}"<br />
+    → "${PART3.evidence.korean}"<br />
+    → <span class="breakdown-chunk">${PART3.evidence.paraphrase}</span><br />
+    → "${PART3.evidence.paraphraseKorean}"
+  `;
+  part3ExplainText.textContent = PART3.explanation;
+
+  showScreen(screenPart3Explain);
+}
+
 // ===== 이벤트 바인딩 =====
 btnStart.addEventListener("click", () => {
   currentIndex = 0;
@@ -372,6 +501,15 @@ btnQuizPlay.addEventListener("click", () => {
 
 btnQuizNext.addEventListener("click", goToNextQuizQuestion);
 
+btnStartPart3.addEventListener("click", startPart3);
+
+btnPart3Play.addEventListener("click", () => {
+  part3AudioNotice.classList.add("hidden");
+  playPart3Audio();
+});
+
+btnShowExplain.addEventListener("click", showPart3Explain);
+
 btnRestart.addEventListener("click", () => {
   currentIndex = 0;
   currentStep = 1;
@@ -383,5 +521,6 @@ btnRestart.addEventListener("click", () => {
   quizIndex = 0;
   quizResults = [];
   quizReplayCount = 0;
+  part3Selected = false;
   showScreen(screenStart);
 });

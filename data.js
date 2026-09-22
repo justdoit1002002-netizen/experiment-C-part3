@@ -241,3 +241,52 @@ const EXPRESSIONS = [
     ]
   }
 ];
+
+// 이번 프로토타입(실험 C)에서 실제로 학습에 사용할 표현 개수.
+// EXPRESSIONS 배열의 앞에서부터 TRAINING_COUNT개만 한글소리 훈련에 사용한다.
+const TRAINING_COUNT = 5;
+
+// ===== 2단계: 실전 Part 3 대화 =====
+// 위에서 학습한 5개 표현(As soon as possible / I'll get back to you /
+// Let me check on that / Could you send me the file? / I'm afraid I can't make it.)이
+// 자연스럽게 포함된 짧은 TOEIC Part 3 스타일 남녀 대화.
+//
+// audio: 실제 대화 음성 파일 경로.
+const PART3 = {
+  audio: "audio/part3.mp3.mp3", // 실제 저장된 파일명 (01~15번과 동일하게 .mp3가 중복된 형태)
+
+  // 대화 스크립트 (해설 화면에서만 공개됨)
+  script: [
+    { speaker: "W", english: "Hi, I need the updated sales report before the client meeting. I'm afraid I can't make it to the office today, so could you send me the file by email?",
+      korean: "안녕하세요, 고객 미팅 전에 업데이트된 판매 보고서가 필요해요. 오늘 사무실에 못 갈 것 같아서요, 그 파일을 이메일로 보내주실 수 있나요?" },
+    { speaker: "M", english: "Sure, let me check on that. I think it's still being finalized.",
+      korean: "네, 제가 확인해볼게요. 아직 마무리 중인 것 같아요." },
+    { speaker: "W", english: "Okay, can you get back to me as soon as possible? The meeting starts in an hour.",
+      korean: "알겠어요, 가능한 한 빨리 다시 연락 주실 수 있나요? 회의가 한 시간 뒤에 시작해요." },
+    { speaker: "M", english: "No problem, I'll get back to you within ten minutes.",
+      korean: "문제없어요, 10분 안에 다시 연락드릴게요." }
+  ],
+
+  question: "What does the woman ask the man to do?",
+  // 문제 제작 원칙 (앞으로 Part 3 문제를 추가할 때도 이 원칙을 지킨다):
+  //  1) 정답 보기는 대화문의 핵심 표현을 그대로 복사하지 않는다.
+  //  2) 반드시 자연스러운 패러프레이징(다른 단어/표현으로 바꿔 말하기)을 사용한다.
+  //  3) 핵심 단어 한두 개만 듣고 정답을 고를 수 없게 한다.
+  //  4) 오답도 대화 내용과 관련된 매력적인(그럴듯한) 오답으로 구성한다.
+  options: [
+    "Confirm an appointment",  // (A) 오답: 대화의 "meeting"에서 연상되지만 실제 요청은 아님
+    "Contact a customer",      // (B) 오답: 업무 맥락상 그럴듯하지만 대화에 없는 내용
+    "Provide a document",      // (C) 정답: "send the file"을 send→provide, file→document로 패러프레이징
+    "Participate in a meeting" // (D) 오답: "meeting"이 대화에 언급되어 매력적이지만 여자의 요청이 아님
+  ],
+  answerIndex: 2, // (C) Provide a document
+
+  evidence: {
+    english: "Could you send me the file?",
+    korean: "그 파일을 보내주시겠어요?",
+    paraphrase: "Provide a document",
+    paraphraseKorean: "문서를 제공하다 / 보내주다"
+  },
+
+  explanation: "여자는 \"Could you send me the file?\"이라고 요청했어요. 보기 (C)는 이 표현을 그대로 쓰지 않고 send → provide, file → document로 자연스럽게 바꿔 말한(패러프레이징) 것입니다. 따라서 정답은 (C) Provide a document입니다."
+};
